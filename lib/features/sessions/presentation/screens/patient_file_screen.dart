@@ -227,8 +227,20 @@ class _SessionDataTable extends StatelessWidget {
                             color: colorScheme.primary,
                             fontWeight: FontWeight.bold))),
                 Expanded(
+                    flex: 2,
+                    child: Text('Doctor',
+                        style: textTheme.labelLarge?.copyWith(
+                            color: colorScheme.primary,
+                            fontWeight: FontWeight.bold))),
+                Expanded(
                     flex: 3,
                     child: Text('Laser Area',
+                        style: textTheme.labelLarge?.copyWith(
+                            color: colorScheme.primary,
+                            fontWeight: FontWeight.bold))),
+                Expanded(
+                    flex: 1,
+                    child: Text('Pulses',
                         style: textTheme.labelLarge?.copyWith(
                             color: colorScheme.primary,
                             fontWeight: FontWeight.bold))),
@@ -245,7 +257,7 @@ class _SessionDataTable extends StatelessWidget {
                             color: colorScheme.primary,
                             fontWeight: FontWeight.bold))),
                 Expanded(
-                    flex: 3,
+                    flex: 2,
                     child: Text('Notes',
                         style: textTheme.labelLarge?.copyWith(
                             color: colorScheme.primary,
@@ -343,6 +355,30 @@ class _SessionRowState extends State<_SessionRow> {
                   ),
                 ),
 
+                // ── Doctor ─────────────────────────────────────────────────
+                Expanded(
+                  flex: 2,
+                  child: Row(
+                    children: [
+                      Icon(Icons.medical_services_rounded,
+                          size: 14, color: colorScheme.secondary),
+                      const SizedBox(width: 4),
+                      Flexible(
+                        child: Text(
+                          widget.session.doctorName ?? '—',
+                          style: textTheme.bodyMedium?.copyWith(
+                            fontWeight: FontWeight.w500,
+                            color: widget.session.doctorName != null
+                                ? colorScheme.onSurface
+                                : colorScheme.outlineVariant,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
                 // ── Laser Area + session number in parentheses ─────────────
                 Expanded(
                   flex: 3,
@@ -356,6 +392,29 @@ class _SessionRowState extends State<_SessionRow> {
                       );
                     }).toList(),
                   ),
+                ),
+
+                // ── Pulses ─────────────────────────────────────────────────
+                Expanded(
+                  flex: 1,
+                  child: widget.session.pulses > 0
+                      ? Row(
+                          children: [
+                            Icon(Icons.flash_on_rounded,
+                                size: 14, color: colorScheme.tertiary),
+                            const SizedBox(width: 4),
+                            Text(
+                              '${widget.session.pulses}',
+                              style: textTheme.bodyMedium?.copyWith(
+                                fontWeight: FontWeight.w600,
+                                color: colorScheme.tertiary,
+                              ),
+                            ),
+                          ],
+                        )
+                      : Text('—',
+                          style: textTheme.bodyMedium?.copyWith(
+                              color: colorScheme.outlineVariant)),
                 ),
 
                 // ── Laser Power ─────────────────────────────────────────────
@@ -398,7 +457,7 @@ class _SessionRowState extends State<_SessionRow> {
 
                 // ── Notes (truncated) ───────────────────────────────────────
                 Expanded(
-                  flex: 3,
+                  flex: 2,
                   child: Text(
                     widget.session.notes.isEmpty ? '—' : widget.session.notes,
                     style: textTheme.bodyMedium

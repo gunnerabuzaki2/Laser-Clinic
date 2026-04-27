@@ -3,6 +3,7 @@
 //
 //  Modal dialog for adding a new laser session.
 //  Supports multi-select area chips + a free-text custom area.
+//  Includes mandatory doctor selection dropdown and optional pulses field.
 // =============================================================================
 
 import 'package:flutter/material.dart';
@@ -10,6 +11,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../providers/session_providers.dart';
+import '../../../doctors/presentation/providers/doctor_providers.dart';
 import '../../../../core/utils/error_formatter.dart';
 
 /// Predefined laser treatment areas shown as selectable chips.
@@ -54,11 +56,13 @@ class _AddSessionDialogState extends ConsumerState<AddSessionDialog> {
   final _laserPowerController = TextEditingController();
   final _notesController = TextEditingController();
   final _customAreaController = TextEditingController();
+  final _pulsesController = TextEditingController();
 
   DateTime _selectedDate = DateTime.now();
   final Set<String> _selectedAreas = {};
   bool _showCustomField = false;
   bool _submitting = false;
+  String? _selectedDoctorId;
 
   @override
   void dispose() {
@@ -66,6 +70,7 @@ class _AddSessionDialogState extends ConsumerState<AddSessionDialog> {
     _laserPowerController.dispose();
     _notesController.dispose();
     _customAreaController.dispose();
+    _pulsesController.dispose();
     super.dispose();
   }
 
@@ -105,8 +110,20 @@ class _AddSessionDialogState extends ConsumerState<AddSessionDialog> {
       );
       return;
     }
+    if (_selectedDoctorId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('Please select a doctor for this session.'),
+          backgroundColor: Theme.of(context).colorScheme.error,
+        ),
+      );
+      return;
+    }
 
     setState(() => _submitting = true);
+
+    final pulsesText = _pulsesController.text.trim();
+    final pulses = pulsesText.isEmpty ? 0 : int.tryParse(pulsesText) ?? 0;
 
     await ref.read(sessionNotifierProvider.notifier).addSession(
           patientId: widget.patientId,
@@ -115,6 +132,8 @@ class _AddSessionDialogState extends ConsumerState<AddSessionDialog> {
           price: double.parse(_priceController.text.trim()),
           laserPower: _laserPowerController.text.trim(),
           notes: _notesController.text.trim(),
+          doctorId: _selectedDoctorId,
+          pulses: pulses,
         );
 
     if (!mounted) return;
@@ -138,6 +157,7 @@ class _AddSessionDialogState extends ConsumerState<AddSessionDialog> {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
+    final doctorsAsync = ref.watch(doctorListProvider);
 
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -202,6 +222,55 @@ class _AddSessionDialogState extends ConsumerState<AddSessionDialog> {
                               ],
                             ),
                           ),
+                        ),
+                        const SizedBox(height: 20),
+
+                        // ── Doctor Selection (Mandatory) ──────────────────────
+                        Row(
+                          children: [
+                            Text('Doctor',
+                                style: textTheme.labelLarge?.copyWith(
+                                    color: colorScheme.onSurfaceVariant)),
+                            const SizedBox(width: 8),
+                            Text('(required)',
+                                style: textTheme.labelSmall?.copyWith(
+                                    color: colorScheme.error)),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        doctorsAsync.when(
+                          loading: () => const LinearProgressIndicator(),
+                          error: (err, _) => Text(
+                            'Failed to load doctors: ${formatErrorMessage(err)}',
+                            style: TextStyle(color: colorScheme.error),
+                          ),
+                          data: (doctors) {
+                            return DropdownButtonFormField<String>(
+                              initialValue: _selectedDoctorId,
+                              decoration: InputDecoration(
+                                prefixIcon:
+                                    const Icon(Icons.medical_services_rounded),
+                                hintText: 'Select session doctor…',
+                                filled: true,
+                                fillColor: colorScheme.surfaceContainerHighest,
+                              ),
+                              items: doctors.map((doctor) {
+                                return DropdownMenuItem<String>(
+                                  value: doctor.id,
+                                  child: Text(doctor.name),
+                                );
+                              }).toList(),
+                              onChanged: (value) {
+                                setState(() => _selectedDoctorId = value);
+                              },
+                              validator: (value) {
+                                if (value == null || value.isEmpty) {
+                                  return 'Please select a doctor.';
+                                }
+                                return null;
+                              },
+                            );
+                          },
                         ),
                         const SizedBox(height: 20),
 
@@ -333,6 +402,21 @@ class _AddSessionDialogState extends ConsumerState<AddSessionDialog> {
                             }
                             return null;
                           },
+                        ),
+                        const SizedBox(height: 16),
+
+                        // ── Pulses (optional) ─────────────────────────────────
+                        TextFormField(
+                          controller: _pulsesController,
+                          keyboardType: TextInputType.number,
+                          inputFormatters: [
+                            FilteringTextInputFormatter.digitsOnly,
+                          ],
+                          decoration: const InputDecoration(
+                            labelText: 'Session Pulses (optional)',
+                            hintText: 'e.g. 250',
+                            prefixIcon: Icon(Icons.flash_on_rounded),
+                          ),
                         ),
                         const SizedBox(height: 16),
 

@@ -33,6 +33,8 @@ class SessionNotifier extends StateNotifier<AsyncValue<void>> {
     required double price,
     required String laserPower,
     required String notes,
+    required String? doctorId,
+    required int pulses,
   }) async {
     state = const AsyncValue.loading();
     state = await AsyncValue.guard(
@@ -43,6 +45,8 @@ class SessionNotifier extends StateNotifier<AsyncValue<void>> {
         price: price,
         laserPower: laserPower,
         notes: notes,
+        doctorId: doctorId,
+        pulses: pulses,
       ),
     );
     _ref.invalidate(sessionListProvider);
@@ -59,4 +63,37 @@ final sessionNotifierProvider =
     StateNotifierProvider<SessionNotifier, AsyncValue<void>>((ref) {
   final repo = ref.watch(sessionRepositoryProvider);
   return SessionNotifier(repo, ref);
+});
+
+// =============================================================================
+//  Doctor Report Providers
+// =============================================================================
+
+/// State for the doctor report parameters
+class DoctorReportParams {
+  final String? doctorId;
+  final DateTime? startDate;
+  final DateTime? endDate;
+
+  const DoctorReportParams({this.doctorId, this.startDate, this.endDate});
+}
+
+final doctorReportParamsProvider =
+    StateProvider<DoctorReportParams>((ref) => const DoctorReportParams());
+
+/// Fetches sessions for doctor report when params are set.
+final doctorReportProvider =
+    FutureProvider.autoDispose<List<LaserSession>?>((ref) async {
+  final params = ref.watch(doctorReportParamsProvider);
+  if (params.doctorId == null ||
+      params.startDate == null ||
+      params.endDate == null) {
+    return null; // No search performed yet
+  }
+  final repo = ref.watch(sessionRepositoryProvider);
+  return repo.fetchForDoctorReport(
+    doctorId: params.doctorId!,
+    startDate: params.startDate!,
+    endDate: params.endDate!,
+  );
 });

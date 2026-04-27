@@ -3,11 +3,13 @@
 //
 //  Screen 1 — Patient Dashboard.
 //  Shows search bar, patient list, and a FAB to add new patients.
+//  Includes admin-only Doctor Report button.
 // =============================================================================
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../providers/patient_providers.dart';
 import '../../data/models/patient_model.dart';
@@ -15,7 +17,11 @@ import '../widgets/add_patient_dialog.dart';
 import '../../../sessions/presentation/screens/patient_file_screen.dart';
 import '../../../sessions/presentation/providers/session_providers.dart';
 import '../../../auth/providers/auth_providers.dart';
+import '../../../doctors/presentation/screens/doctor_report_screen.dart';
 import '../../../../core/utils/error_formatter.dart';
+
+/// The admin email that has access to the Doctor Report feature.
+const String kAdminEmail = 'admin@laser-clinic.com';
 
 class PatientDashboardScreen extends ConsumerStatefulWidget {
   const PatientDashboardScreen({super.key});
@@ -62,11 +68,27 @@ class _PatientDashboardScreenState
     );
   }
 
+  /// Check if the current user is the admin.
+  bool get _isAdmin {
+    final user = Supabase.instance.client.auth.currentUser;
+    return user?.email?.toLowerCase() == kAdminEmail;
+  }
+
+  void _navigateToDoctorReport(BuildContext context) {
+    if (!_isAdmin) return;
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => const DoctorReportScreen(),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final patientListAsync = ref.watch(patientListProvider);
+    final isAdmin = _isAdmin;
 
     return Scaffold(
       // -----------------------------------------------------------------------
@@ -89,6 +111,33 @@ class _PatientDashboardScreenState
           ],
         ),
         actions: [
+          // ── Doctor Report Button ─────────────────────────────────────────
+          Tooltip(
+            message: isAdmin
+                ? 'Doctor Session Report'
+                : 'Admin access required',
+            child: FilledButton.tonalIcon(
+              onPressed: isAdmin
+                  ? () => _navigateToDoctorReport(context)
+                  : null,
+              icon: Icon(
+                Icons.analytics_rounded,
+                color: isAdmin
+                    ? colorScheme.primary
+                    : colorScheme.onSurface.withValues(alpha: 0.38),
+              ),
+              label: Text(
+                'Doctor Report',
+                style: TextStyle(
+                  color: isAdmin
+                      ? colorScheme.onSecondaryContainer
+                      : colorScheme.onSurface.withValues(alpha: 0.38),
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
+
           IconButton(
             icon: const Icon(Icons.logout_rounded),
             tooltip: 'Log out',

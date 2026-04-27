@@ -10,6 +10,9 @@ class LaserSession {
   final double price;
   final String laserPower; // e.g. "18 J/cm²", "20W", etc.
   final String notes;
+  final String? doctorId;
+  final String? doctorName; // Populated from join query
+  final int pulses;
 
   const LaserSession({
     required this.id,
@@ -19,9 +22,18 @@ class LaserSession {
     required this.price,
     required this.laserPower,
     required this.notes,
+    this.doctorId,
+    this.doctorName,
+    this.pulses = 0,
   });
 
   factory LaserSession.fromJson(Map<String, dynamic> json) {
+    // Handle joined doctor data — Supabase returns nested object for FK joins
+    String? doctorName;
+    if (json['doctors'] != null && json['doctors'] is Map) {
+      doctorName = json['doctors']['name'] as String?;
+    }
+
     return LaserSession(
       id: json['id'] as String,
       patientId: json['patient_id'] as String,
@@ -30,6 +42,9 @@ class LaserSession {
       price: (json['price'] as num).toDouble(),
       laserPower: json['laser_power'] as String? ?? '',
       notes: json['notes'] as String? ?? '',
+      doctorId: json['doctor_id'] as String?,
+      doctorName: doctorName,
+      pulses: (json['pulses'] as num?)?.toInt() ?? 0,
     );
   }
 
@@ -41,6 +56,8 @@ class LaserSession {
       'price': price,
       'laser_power': laserPower,
       'notes': notes,
+      'doctor_id': doctorId,
+      'pulses': pulses,
     };
   }
 }

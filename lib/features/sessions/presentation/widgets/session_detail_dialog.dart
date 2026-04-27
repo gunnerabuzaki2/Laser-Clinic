@@ -23,9 +23,10 @@ class SessionDetailDialog extends StatelessWidget {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 520),
-        child: Padding(
-          padding: const EdgeInsets.all(28.0),
-          child: Column(
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.all(28.0),
+            child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -54,6 +55,19 @@ class SessionDetailDialog extends StatelessWidget {
                 label: 'Date',
                 value: DateFormat('EEEE, d MMMM yyyy')
                     .format(session.sessionDate),
+                colorScheme: colorScheme,
+                textTheme: textTheme,
+              ),
+              const SizedBox(height: 16),
+
+              // ── Doctor ──────────────────────────────────────────────────────
+              _DetailRow(
+                icon: Icons.medical_services_rounded,
+                label: 'Doctor',
+                value: session.doctorName ?? 'Not assigned',
+                valueColor: session.doctorName != null
+                    ? colorScheme.onSurface
+                    : colorScheme.outline,
                 colorScheme: colorScheme,
                 textTheme: textTheme,
               ),
@@ -99,6 +113,21 @@ class SessionDetailDialog extends StatelessWidget {
                     ),
                   ),
                 ],
+              ),
+              const SizedBox(height: 16),
+
+              // ── Pulses ──────────────────────────────────────────────────────
+              _DetailRow(
+                icon: Icons.flash_on_rounded,
+                label: 'Session Pulses',
+                value: session.pulses > 0
+                    ? '${session.pulses}'
+                    : 'Not recorded',
+                valueColor: session.pulses > 0
+                    ? colorScheme.tertiary
+                    : colorScheme.outline,
+                colorScheme: colorScheme,
+                textTheme: textTheme,
               ),
               const SizedBox(height: 16),
 
@@ -184,6 +213,7 @@ class SessionDetailDialog extends StatelessWidget {
               ),
             ],
           ),
+        ),
         ),
       ),
     );
