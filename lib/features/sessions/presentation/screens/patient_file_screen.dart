@@ -173,14 +173,34 @@ class _SessionDataTable extends StatelessWidget {
   final List<LaserSession> sessions;
   final void Function(LaserSession) onDelete;
 
-  /// Returns the 1-based session number for [current] among sessions
-  /// that share the same laserArea, sorted chronologically.
-  int _sessionNumber(LaserSession current) {
-    final sameArea = sessions
-        .where((s) => s.laserArea == current.laserArea)
-        .toList()
+  /// Returns a map of each sub-area to its 1-based session count up to [current]
+  /// session, sorted chronologically.
+  Map<String, int> _getAreaSessionNumbers(LaserSession current) {
+    final Map<String, int> counts = {};
+    final currentAreas = current.laserArea
+        .split(',')
+        .map((e) => e.trim())
+        .where((e) => e.isNotEmpty)
+        .toList();
+
+    // Sort all sessions chronologically to calculate accurate history counts
+    final sortedSessions = List<LaserSession>.from(sessions)
       ..sort((a, b) => a.sessionDate.compareTo(b.sessionDate));
-    return sameArea.indexWhere((s) => s.id == current.id) + 1;
+
+    for (final area in currentAreas) {
+      int count = 0;
+      for (final s in sortedSessions) {
+        final sAreas = s.laserArea.split(',').map((e) => e.trim()).toList();
+        if (sAreas.contains(area)) {
+          count++;
+        }
+        if (s.id == current.id) {
+          counts[area] = count;
+          break;
+        }
+      }
+    }
+    return counts;
   }
 
   @override
@@ -244,7 +264,7 @@ class _SessionDataTable extends StatelessWidget {
                 final session = sessions[index];
                 return _SessionRow(
                   session: session,
-                  sessionNumber: _sessionNumber(session),
+                  areaSessionNumbers: _getAreaSessionNumbers(session),
                   onDelete: () => onDelete(session),
                 );
               },
@@ -262,12 +282,12 @@ class _SessionDataTable extends StatelessWidget {
 class _SessionRow extends StatefulWidget {
   const _SessionRow({
     required this.session,
-    required this.sessionNumber,
+    required this.areaSessionNumbers,
     required this.onDelete,
   });
 
   final LaserSession session;
-  final int sessionNumber;
+  final Map<String, int> areaSessionNumbers;
   final VoidCallback onDelete;
 
   @override
@@ -325,9 +345,15 @@ class _SessionRowState extends State<_SessionRow> {
                 // ── Laser Area + session number in parentheses ─────────────
                 Expanded(
                   flex: 3,
-                  child: _AreaBadge(
-                    area: widget.session.laserArea,
-                    sessionNumber: widget.sessionNumber,
+                  child: Wrap(
+                    spacing: 4,
+                    runSpacing: 4,
+                    children: widget.areaSessionNumbers.entries.map((e) {
+                      return _AreaBadge(
+                        area: e.key,
+                        sessionNumber: e.value,
+                      );
+                    }).toList(),
                   ),
                 ),
 
