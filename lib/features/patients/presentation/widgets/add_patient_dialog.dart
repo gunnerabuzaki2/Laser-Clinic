@@ -8,6 +8,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/patient_providers.dart';
+import '../../../../core/utils/error_formatter.dart';
 
 class AddPatientDialog extends ConsumerStatefulWidget {
   const AddPatientDialog({super.key});
@@ -46,7 +47,7 @@ class _AddPatientDialogState extends ConsumerState<AddPatientDialog> {
       error: (err, _) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error: $err'),
+            content: Text(formatErrorMessage(err)),
             backgroundColor: Theme.of(context).colorScheme.error,
           ),
         );

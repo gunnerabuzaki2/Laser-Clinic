@@ -54,10 +54,22 @@ class PatientRepository {
     required String name,
     required String phoneNumber,
   }) async {
+    // 1. Enforce unique phone number
+    final existing = await _client
+        .from(_table)
+        .select('id')
+        .eq('phone_number', phoneNumber.trim())
+        .maybeSingle();
+
+    if (existing != null) {
+      throw Exception('A patient with this phone number already exists.');
+    }
+
+    // 2. Insert new patient
     final newPatient = Patient(
       id: '',          // Will be assigned by Supabase
-      name: name,
-      phoneNumber: phoneNumber,
+      name: name.trim(),
+      phoneNumber: phoneNumber.trim(),
       createdAt: DateTime.now(), // Placeholder; Supabase sets the real value
     );
 

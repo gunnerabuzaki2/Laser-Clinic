@@ -13,6 +13,7 @@ import '../providers/session_providers.dart';
 import '../../data/models/session_model.dart';
 import '../widgets/add_session_dialog.dart';
 import '../widgets/session_detail_dialog.dart';
+import '../../../../core/utils/error_formatter.dart';
 
 class PatientFileScreen extends ConsumerWidget {
   const PatientFileScreen({super.key, required this.patient});
@@ -129,7 +130,7 @@ class PatientFileScreen extends ConsumerWidget {
                       Icon(Icons.error_outline_rounded,
                           color: colorScheme.error, size: 48),
                       const SizedBox(height: 12),
-                      SelectableText('Error: $err',
+                      SelectableText(formatErrorMessage(err),
                           style: TextStyle(color: colorScheme.error)),
                     ],
                   ),

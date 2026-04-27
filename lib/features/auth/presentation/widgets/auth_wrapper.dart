@@ -9,6 +9,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../providers/auth_providers.dart';
 import '../screens/login_screen.dart';
 import '../../../patients/presentation/screens/patient_dashboard_screen.dart';
+import '../../../../core/utils/error_formatter.dart';
 
 class AuthWrapper extends ConsumerWidget {
   const AuthWrapper({super.key});
@@ -31,7 +32,7 @@ class AuthWrapper extends ConsumerWidget {
       ),
       error: (error, _) => Scaffold(
         body: Center(
-          child: Text('Auth Error: $error', 
+          child: Text(formatErrorMessage(error), 
             style: TextStyle(color: Theme.of(context).colorScheme.error)),
         ),
       ),

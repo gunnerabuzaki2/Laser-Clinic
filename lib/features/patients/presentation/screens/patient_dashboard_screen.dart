@@ -15,6 +15,7 @@ import '../widgets/add_patient_dialog.dart';
 import '../../../sessions/presentation/screens/patient_file_screen.dart';
 import '../../../sessions/presentation/providers/session_providers.dart';
 import '../../../auth/providers/auth_providers.dart';
+import '../../../../core/utils/error_formatter.dart';
 
 class PatientDashboardScreen extends ConsumerStatefulWidget {
   const PatientDashboardScreen({super.key});
@@ -164,7 +165,7 @@ class _PatientDashboardScreenState
             Expanded(
               child: patientListAsync.when(
                 loading: () => const Center(child: CircularProgressIndicator()),
-                error: (err, _) => _ErrorWidget(message: err.toString()),
+                error: (err, _) => _ErrorWidget(message: formatErrorMessage(err)),
                 data: (patients) {
                   if (patients.isEmpty) {
                     return _EmptyState(

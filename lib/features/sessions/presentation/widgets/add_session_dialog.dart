@@ -10,6 +10,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../providers/session_providers.dart';
+import '../../../../core/utils/error_formatter.dart';
 
 /// Predefined laser treatment areas shown as selectable chips.
 const List<String> kLaserAreas = [
@@ -124,7 +125,7 @@ class _AddSessionDialogState extends ConsumerState<AddSessionDialog> {
       error: (err, _) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error: $err'),
+            content: Text(formatErrorMessage(err)),
             backgroundColor: Theme.of(context).colorScheme.error,
           ),
         );
