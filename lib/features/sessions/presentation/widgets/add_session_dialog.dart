@@ -13,19 +13,29 @@ import '../providers/session_providers.dart';
 
 /// Predefined laser treatment areas shown as selectable chips.
 const List<String> kLaserAreas = [
-  'Face',
   'Full Body',
-  'Underarms',
-  'Legs',
-  'Arms',
-  'Back',
-  'Chest',
-  'Bikini Line',
-  'Brazilian',
+  'Face (Full)',
   'Upper Lip',
   'Chin',
+  'Sideburns',
+  'Jawline',
+  'Cheeks',
   'Neck',
+  'Underarms',
+  'Full Arms',
+  'Half Arms',
+  'Hands & Fingers',
+  'Full Legs',
+  'Half Legs',
+  'Feet & Toes',
+  'Chest',
+  'Abdomen',
+  'Full Back',
+  'Lower Back',
   'Shoulders',
+  'Bikini Line',
+  'Brazilian',
+  'Buttocks',
 ];
 
 class AddSessionDialog extends ConsumerStatefulWidget {
@@ -131,7 +141,7 @@ class _AddSessionDialogState extends ConsumerState<AddSessionDialog> {
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 580, maxHeight: 700),
+        constraints: const BoxConstraints(maxWidth: 700, maxHeight: 900),
         child: Padding(
           padding: const EdgeInsets.all(28.0),
           child: Form(

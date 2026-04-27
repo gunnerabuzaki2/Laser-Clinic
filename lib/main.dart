@@ -14,7 +14,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'core/supabase_config.dart';
 import 'core/theme.dart';
-import 'features/patients/presentation/screens/patient_dashboard_screen.dart';
+import 'features/auth/presentation/widgets/auth_wrapper.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -44,7 +44,7 @@ class LaserClinicApp extends StatelessWidget {
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
       themeMode: ThemeMode.dark,
-      home: const PatientDashboardScreen(),
+      home: const AuthWrapper(),
     );
   }
 }

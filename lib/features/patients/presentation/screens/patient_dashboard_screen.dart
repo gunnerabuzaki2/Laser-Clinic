@@ -14,6 +14,7 @@ import '../../data/models/patient_model.dart';
 import '../widgets/add_patient_dialog.dart';
 import '../../../sessions/presentation/screens/patient_file_screen.dart';
 import '../../../sessions/presentation/providers/session_providers.dart';
+import '../../../auth/providers/auth_providers.dart';
 
 class PatientDashboardScreen extends ConsumerStatefulWidget {
   const PatientDashboardScreen({super.key});
@@ -87,12 +88,19 @@ class _PatientDashboardScreenState
           ],
         ),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.logout_rounded),
+            tooltip: 'Log out',
+            onPressed: () => ref.read(authNotifierProvider.notifier).signOut(),
+          ),
           Padding(
-            padding: const EdgeInsets.only(right: 16),
-            child: Text(
-              DateFormat('EEEE, d MMMM yyyy').format(DateTime.now()),
-              style: theme.textTheme.bodyMedium
-                  ?.copyWith(color: colorScheme.onSurfaceVariant),
+            padding: const EdgeInsets.only(right: 16, left: 8),
+            child: Center(
+              child: Text(
+                DateFormat('EEEE, d MMMM yyyy').format(DateTime.now()),
+                style: theme.textTheme.bodyMedium
+                    ?.copyWith(color: colorScheme.onSurfaceVariant),
+              ),
             ),
           ),
         ],
