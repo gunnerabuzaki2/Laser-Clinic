@@ -21,12 +21,14 @@ class _AddPatientDialogState extends ConsumerState<AddPatientDialog> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _phoneController = TextEditingController();
+  final _addressController = TextEditingController();
   bool _submitting = false;
 
   @override
   void dispose() {
     _nameController.dispose();
     _phoneController.dispose();
+    _addressController.dispose();
     super.dispose();
   }
 
@@ -37,6 +39,7 @@ class _AddPatientDialogState extends ConsumerState<AddPatientDialog> {
     await ref.read(patientNotifierProvider.notifier).addPatient(
           name: _nameController.text.trim(),
           phoneNumber: _phoneController.text.trim(),
+          address: _addressController.text.trim(),
         );
 
     if (!mounted) return;
@@ -122,6 +125,21 @@ class _AddPatientDialogState extends ConsumerState<AddPatientDialog> {
                     }
                     return null;
                   },
+                ),
+                const SizedBox(height: 16),
+
+                // Address field
+                TextFormField(
+                  controller: _addressController,
+                  textCapitalization: TextCapitalization.sentences,
+                  maxLines: 2,
+                  decoration: const InputDecoration(
+                    labelText: 'Address',
+                    hintText: 'e.g. 15 Tahrir St, Cairo',
+                    prefixIcon: Icon(Icons.location_on_outlined),
+                    alignLabelWithHint: true,
+                  ),
+                  // Address is optional — no validator needed
                 ),
                 const SizedBox(height: 28),
 

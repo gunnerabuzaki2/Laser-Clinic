@@ -14,6 +14,8 @@ import '../../data/models/session_model.dart';
 import '../widgets/add_session_dialog.dart';
 import '../widgets/session_detail_dialog.dart';
 import '../../../../core/utils/error_formatter.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../../../features/patients/presentation/screens/patient_dashboard_screen.dart' show kAdminEmail;
 
 class PatientFileScreen extends ConsumerWidget {
   const PatientFileScreen({super.key, required this.patient});
@@ -25,6 +27,7 @@ class PatientFileScreen extends ConsumerWidget {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final sessionListAsync = ref.watch(sessionListProvider);
+    final isAdmin = Supabase.instance.client.auth.currentUser?.email?.toLowerCase() == kAdminEmail;
 
     return Scaffold(
       appBar: AppBar(
@@ -143,6 +146,7 @@ class PatientFileScreen extends ConsumerWidget {
                   }
                   return _SessionDataTable(
                     sessions: sessions,
+                    isAdmin: isAdmin,
                     onDelete: (s) => ref
                         .read(sessionNotifierProvider.notifier)
                         .deleteSession(s.id),
@@ -169,9 +173,10 @@ class PatientFileScreen extends ConsumerWidget {
 //  Session Data Table
 // =============================================================================
 class _SessionDataTable extends StatelessWidget {
-  const _SessionDataTable({required this.sessions, required this.onDelete});
+  const _SessionDataTable({required this.sessions, required this.isAdmin, required this.onDelete});
 
   final List<LaserSession> sessions;
+  final bool isAdmin;
   final void Function(LaserSession) onDelete;
 
   /// Returns a map of each sub-area to its 1-based session count up to [current]
@@ -278,6 +283,7 @@ class _SessionDataTable extends StatelessWidget {
                 return _SessionRow(
                   session: session,
                   areaSessionNumbers: _getAreaSessionNumbers(session),
+                  isAdmin: isAdmin,
                   onDelete: () => onDelete(session),
                 );
               },
@@ -296,11 +302,13 @@ class _SessionRow extends StatefulWidget {
   const _SessionRow({
     required this.session,
     required this.areaSessionNumbers,
+    required this.isAdmin,
     required this.onDelete,
   });
 
   final LaserSession session;
   final Map<String, int> areaSessionNumbers;
+  final bool isAdmin;
   final VoidCallback onDelete;
 
   @override
@@ -469,7 +477,7 @@ class _SessionRowState extends State<_SessionRow> {
 
                 // ── Actions ─────────────────────────────────────────────────
                 SizedBox(
-                  width: 96,
+                  width: widget.isAdmin ? 96 : 48,
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
@@ -481,14 +489,15 @@ class _SessionRowState extends State<_SessionRow> {
                           onPressed: () => _openDetail(context),
                         ),
                       ),
-                      Tooltip(
-                        message: 'Delete Session',
-                        child: IconButton(
-                          icon: Icon(Icons.delete_outline_rounded,
-                              color: colorScheme.error, size: 20),
-                          onPressed: () => _confirmDelete(context),
+                      if (widget.isAdmin)
+                        Tooltip(
+                          message: 'Delete Session',
+                          child: IconButton(
+                            icon: Icon(Icons.delete_outline_rounded,
+                                color: colorScheme.error, size: 20),
+                            onPressed: () => _confirmDelete(context),
+                          ),
                         ),
-                      ),
                     ],
                   ),
                 ),

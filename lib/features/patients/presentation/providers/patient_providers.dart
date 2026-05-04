@@ -46,10 +46,11 @@ class PatientNotifier extends StateNotifier<AsyncValue<void>> {
   Future<void> addPatient({
     required String name,
     required String phoneNumber,
+    String address = '',
   }) async {
     state = const AsyncValue.loading();
     state = await AsyncValue.guard(
-      () => _repo.insert(name: name, phoneNumber: phoneNumber),
+      () => _repo.insert(name: name, phoneNumber: phoneNumber, address: address),
     );
     // Invalidate the list so FutureProvider re-fetches automatically.
     _ref.invalidate(patientListProvider);

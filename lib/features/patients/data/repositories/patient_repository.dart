@@ -39,7 +39,7 @@ class PatientRepository {
     final response = await _client
         .from(_table)
         .select()
-        .or('name.ilike.%$q%,phone_number.ilike.%$q%')
+        .or('name.ilike.%$q%,phone_number.ilike.%$q%,address.ilike.%$q%')
         .order('created_at', ascending: false);
 
     return response
@@ -53,6 +53,7 @@ class PatientRepository {
   Future<Patient> insert({
     required String name,
     required String phoneNumber,
+    String address = '',
   }) async {
     // 1. Enforce unique phone number
     final existing = await _client
@@ -70,6 +71,7 @@ class PatientRepository {
       id: '',          // Will be assigned by Supabase
       name: name.trim(),
       phoneNumber: phoneNumber.trim(),
+      address: address.trim(),
       createdAt: DateTime.now(), // Placeholder; Supabase sets the real value
     );
 

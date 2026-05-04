@@ -87,6 +87,7 @@ class _PatientDashboardScreenState
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final searchQuery = ref.watch(patientSearchQueryProvider);
     final patientListAsync = ref.watch(patientListProvider);
     final isAdmin = _isAdmin;
 
@@ -174,7 +175,7 @@ class _PatientDashboardScreenState
                     controller: _searchController,
                     onChanged: _onSearchChanged,
                     decoration: InputDecoration(
-                      hintText: 'Search patients by name or phone number…',
+                      hintText: 'Search patients by name, phone number, or address…',
                       prefixIcon: const Icon(Icons.search),
                       suffixIcon: _searchController.text.isNotEmpty
                           ? IconButton(
@@ -209,27 +210,28 @@ class _PatientDashboardScreenState
             const SizedBox(height: 8),
 
             // -----------------------------------------------------------------
-            //  Patient list
+            //  Patient list — only show results when searching
             // -----------------------------------------------------------------
             Expanded(
-              child: patientListAsync.when(
-                loading: () => const Center(child: CircularProgressIndicator()),
-                error: (err, _) => _ErrorWidget(message: formatErrorMessage(err)),
-                data: (patients) {
-                  if (patients.isEmpty) {
-                    return _EmptyState(
-                      onAddPatient: () => _openAddPatientDialog(context),
-                    );
-                  }
-                  return _PatientDataTable(
-                    patients: patients,
-                    onRowTap: (p) => _navigateToPatientFile(context, p),
-                    onDelete: (p) => ref
-                        .read(patientNotifierProvider.notifier)
-                        .deletePatient(p.id),
-                  );
-                },
-              ),
+              child: searchQuery.trim().isEmpty
+                  ? const _SearchPromptState()
+                  : patientListAsync.when(
+                      loading: () => const Center(child: CircularProgressIndicator()),
+                      error: (err, _) => _ErrorWidget(message: formatErrorMessage(err)),
+                      data: (patients) {
+                        if (patients.isEmpty) {
+                          return const _EmptyState();
+                        }
+                        return _PatientDataTable(
+                          patients: patients,
+                          isAdmin: isAdmin,
+                          onRowTap: (p) => _navigateToPatientFile(context, p),
+                          onDelete: (p) => ref
+                              .read(patientNotifierProvider.notifier)
+                              .deletePatient(p.id),
+                        );
+                      },
+                    ),
             ),
           ],
         ),
@@ -245,11 +247,13 @@ class _PatientDashboardScreenState
 class _PatientDataTable extends StatelessWidget {
   const _PatientDataTable({
     required this.patients,
+    required this.isAdmin,
     required this.onRowTap,
     required this.onDelete,
   });
 
   final List<Patient> patients;
+  final bool isAdmin;
   final void Function(Patient) onRowTap;
   final void Function(Patient) onDelete;
 
@@ -281,6 +285,12 @@ class _PatientDataTable extends StatelessWidget {
                             color: colorScheme.primary,
                             fontWeight: FontWeight.bold))),
                 Expanded(
+                    flex: 3,
+                    child: Text('Address',
+                        style: textTheme.labelLarge?.copyWith(
+                            color: colorScheme.primary,
+                            fontWeight: FontWeight.bold))),
+                Expanded(
                     flex: 2,
                     child: Text('Registered On',
                         style: textTheme.labelLarge?.copyWith(
@@ -301,6 +311,7 @@ class _PatientDataTable extends StatelessWidget {
                 final patient = patients[index];
                 return _PatientRow(
                   patient: patient,
+                  isAdmin: isAdmin,
                   onTap: () => onRowTap(patient),
                   onDelete: () => onDelete(patient),
                 );
@@ -316,11 +327,13 @@ class _PatientDataTable extends StatelessWidget {
 class _PatientRow extends StatefulWidget {
   const _PatientRow({
     required this.patient,
+    required this.isAdmin,
     required this.onTap,
     required this.onDelete,
   });
 
   final Patient patient;
+  final bool isAdmin;
   final VoidCallback onTap;
   final VoidCallback onDelete;
 
@@ -379,6 +392,18 @@ class _PatientRowState extends State<_PatientRow> {
                           color: colorScheme.onSurfaceVariant)),
                 ),
                 Expanded(
+                  flex: 3,
+                  child: Text(
+                    widget.patient.address.isNotEmpty
+                        ? widget.patient.address
+                        : '—',
+                    style: textTheme.bodyMedium?.copyWith(
+                        color: colorScheme.onSurfaceVariant),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                Expanded(
                   flex: 2,
                   child: Text(
                     DateFormat('dd MMM yyyy')
@@ -389,7 +414,7 @@ class _PatientRowState extends State<_PatientRow> {
                 ),
                 // Actions
                 SizedBox(
-                  width: 80,
+                  width: widget.isAdmin ? 80 : 48,
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
@@ -401,14 +426,15 @@ class _PatientRowState extends State<_PatientRow> {
                           onPressed: widget.onTap,
                         ),
                       ),
-                      Tooltip(
-                        message: 'Delete Patient',
-                        child: IconButton(
-                          icon: Icon(Icons.delete_outline_rounded,
-                              color: colorScheme.error),
-                          onPressed: () => _confirmDelete(context),
+                      if (widget.isAdmin)
+                        Tooltip(
+                          message: 'Delete Patient',
+                          child: IconButton(
+                            icon: Icon(Icons.delete_outline_rounded,
+                                color: colorScheme.error),
+                            onPressed: () => _confirmDelete(context),
+                          ),
                         ),
-                      ),
                     ],
                   ),
                 ),
@@ -451,8 +477,7 @@ class _PatientRowState extends State<_PatientRow> {
 //  Empty state widget
 // =============================================================================
 class _EmptyState extends StatelessWidget {
-  const _EmptyState({required this.onAddPatient});
-  final VoidCallback onAddPatient;
+  const _EmptyState();
 
   @override
   Widget build(BuildContext context) {
@@ -470,17 +495,44 @@ class _EmptyState extends StatelessWidget {
                   .titleMedium
                   ?.copyWith(color: colorScheme.onSurfaceVariant)),
           const SizedBox(height: 8),
-          Text('Add your first patient to get started.',
+          Text('Try a different search or add a new patient using the button above.',
               style: Theme.of(context)
                   .textTheme
                   .bodyMedium
                   ?.copyWith(color: colorScheme.outlineVariant)),
-          const SizedBox(height: 24),
-          FilledButton.icon(
-            onPressed: onAddPatient,
-            icon: const Icon(Icons.person_add_alt_1_rounded),
-            label: const Text('Add New Patient'),
-          ),
+        ],
+      ),
+    );
+  }
+}
+
+// =============================================================================
+//  Search prompt widget — shown when no search query is entered
+// =============================================================================
+class _SearchPromptState extends StatelessWidget {
+  const _SearchPromptState();
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.search_rounded,
+              size: 72, color: colorScheme.outlineVariant),
+          const SizedBox(height: 16),
+          Text('Search for a patient',
+              style: Theme.of(context)
+                  .textTheme
+                  .titleMedium
+                  ?.copyWith(color: colorScheme.onSurfaceVariant)),
+          const SizedBox(height: 8),
+          Text('Type a name, phone number, or address to find a patient.',
+              style: Theme.of(context)
+                  .textTheme
+                  .bodyMedium
+                  ?.copyWith(color: colorScheme.outlineVariant)),
         ],
       ),
     );

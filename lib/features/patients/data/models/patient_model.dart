@@ -7,12 +7,14 @@ class Patient {
   final String id;
   final String name;
   final String phoneNumber;
+  final String address;
   final DateTime createdAt;
 
   const Patient({
     required this.id,
     required this.name,
     required this.phoneNumber,
+    this.address = '',
     required this.createdAt,
   });
 
@@ -22,6 +24,7 @@ class Patient {
       id: json['id'] as String,
       name: json['name'] as String,
       phoneNumber: json['phone_number'] as String,
+      address: (json['address'] as String?) ?? '',
       createdAt: DateTime.parse(json['created_at'] as String),
     );
   }
@@ -31,9 +34,10 @@ class Patient {
     return {
       'name': name,
       'phone_number': phoneNumber,
+      'address': address,
     };
   }
 
   @override
-  String toString() => 'Patient(id: $id, name: $name, phone: $phoneNumber)';
+  String toString() => 'Patient(id: $id, name: $name, phone: $phoneNumber, address: $address)';
 }
